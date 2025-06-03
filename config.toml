@@ -1,0 +1,16 @@
+[[devices]]
+name = 'sw1'
+type = 'switch'
+connections = ['pc1', 'pc2']
+
+[[devices]]
+name = 'pc1'
+type = 'client'
+ip_addr = '192.168.10.2/24'
+connections = ['sw1']
+
+[[devices]]
+name = 'pc2'
+type = 'client'
+ip_addr = '192.168.20.2/24'
+connections = ['sw1']
