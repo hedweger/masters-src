@@ -1,5 +1,7 @@
 tmp/
 images/*
+*.iso
+*qcow2
 
 
 __pycache__/
