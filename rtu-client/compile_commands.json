@@ -1,0 +1,8 @@
+[
+{
+  "directory": "/Users/th/workspace/masters/rtu-src/build",
+  "command": "/usr/bin/cc  -I/Users/th/workspace/masters/rtu-src/. -I/opt/homebrew/include/libiec61850  -arch arm64 -o CMakeFiles/foo.dir/main.c.o -c /Users/th/workspace/masters/rtu-src/main.c",
+  "file": "/Users/th/workspace/masters/rtu-src/main.c",
+  "output": "CMakeFiles/foo.dir/main.c.o"
+}
+]
