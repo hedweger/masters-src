@@ -1,0 +1,14 @@
+devices:
+  - name: "sw1"
+    type: "switch"
+    connected_to:
+      - "pc1"
+      - "pc2"
+  - name: "pc1"
+    type: "rtu"
+    connected_to:
+      - "sw1"
+  - name: "pc2"
+    type: "rtu"
+    connected_to:
+      - "sw1"

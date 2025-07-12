@@ -1,0 +1,19 @@
+#cloud-config
+hostname: {{ ud.hostname }}
+password: {{ ud.password }}
+chpasswd: { expire: False }
+ssh_pwauth: True
+runcmd:
+{% for command in ud.commands %}
+	- {{ command }}
+{% endfor %}
+write_files:
+{% for write in ud.writes %}
+	- path: {{ write.path }}
+		owner: {{ write.owner }}
+		permissions: "{{ write.permissions }}"
+		content: |
+{% for line in write.content.splitlines() %}
+		{{ line }}
+{% endfor %}
+{% endfor %}
