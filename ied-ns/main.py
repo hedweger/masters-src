@@ -1,12 +1,13 @@
-import yaml
+import logging, os
 from config.devman import DeviceManager
-import ipaddress as ip
 
+logger = logging.getLogger(__name__)
 
 def main(config: str):
     dman = DeviceManager()
     dman.parse(config)
-    dman.list()
+    dman.prepare_devs()
+
 
 if __name__ == "__main__":
-    main("config.yaml")
+    main(os.path.abspath("./config.yaml"))

@@ -1,0 +1,50 @@
+<domain type='kvm'>
+	<name>{{name}}</name>
+	<memory unit='MiB'>{{nram}}</memory>
+	<vcpu placement='static'>{{vcpu}}</vcpu>
+	<os>
+		<type arch='x86_64' machine='pc'>hvm</type>
+		<boot dev='hd'/>
+	</os>
+	<features>
+		<acpi/>
+		<apic/>
+		<pae/>
+	</features>
+	<clock offset='utc'/>
+	<on_poweroff>destroy</on_poweroff>
+	<on_reboot>restart</on_reboot>
+	<on_crash>destroy</on_crash>
+	<devices>
+		<disk type='file' device='disk'>
+			<driver name='qemu' type='qcow2' cache='none'/>
+			<source file='{{disk}}'/>
+			<target dev='vda' bus='virtio'/>
+		</disk>
+		<disk type='file' device='cdrom'>
+			<driver name='qemu' type='raw'/>
+			<source file='{{seed}}'/>
+			<target dev='hdc' bus='ide'/>
+			<readonly/>
+		</disk>
+		{% for net in nets %}
+		<interface type='network'>
+			<mac address='{{net.mac}}'/>
+			<source network='{{net.name}}'/>
+			<model type='virtio'/>
+		</interface>
+		{% endfor %}
+		{% if type is 'sw'%}
+		<interface type='network'>
+			<source network='default'/>
+			<model type='virtio'/>
+		</interface>
+		{% endif %}
+		<serial type='pty'>
+			<target port='0'/>
+		</serial>
+		<console type='pty'>
+			<target type='serial' port='0'/>
+		</console>
+	</devices>
+</domain>

@@ -18,6 +18,7 @@ def main(out="tmp/"):
         name = dev["name"]
         type = dev["type"]
         name_type[name] = type
+
         name_conn[name] = dev["connections"]
 
     conn_pairs = []

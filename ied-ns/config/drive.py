@@ -4,7 +4,8 @@ def qcow2(context: str, name: str):
     os.makedirs(context, exist_ok=True)
     subprocess.run(
         [
-            "qemu-img create",
+            "qemu-img",
+            "create",
             "-f qcow2",
             "-o backing_file=",
             os.path.abspath("images/debian-12-base.qcow2"),
@@ -12,4 +13,4 @@ def qcow2(context: str, name: str):
         ],
         check=True,
     )
-    return = f"{context}/debian-12-{name}.qcow2",
+    return f"{context}/debian-12-{name}.qcow2"
