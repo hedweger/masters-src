@@ -1,5 +1,16 @@
-- errors: let crash or try to recover??
-- config: TOML or YAML? -> YAML
+- RTU
+- [ ] sestavovani RTU bez .scd souboru (nachystat)
+- [ ] muze but random hodnoty, nebo mirror z realnyho zarizeni
+- Sitova vrstva
+- [ ] pcap -> struktura
+- [ ] musi jit vypnout aby to neslo poznat
+- SCADA
+- [ ] zatim chill, nemusim resit
+
+- [ ] back kanal na ovladani switchu
+- [ ] nejak vyresit nmap, resp. aby slo nacist ty sitovy struktury automaticky na real zarizeni
+- [ ] nejakej analyzator na SCD file/struktury
+
 1. parse config.toml file to get network layout + RTU units + etc.
 2. prepare the correct number of VMs for the simulation:
     so far:

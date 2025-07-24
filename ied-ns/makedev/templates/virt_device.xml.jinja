@@ -29,22 +29,22 @@
 		</disk>
 		{% for net in nets %}
 		<interface type='network'>
-			<mac address='{{net.mac}}'/>
-			<source network='{{net.name}}'/>
+			<mac address='{{net['mac']}}'/>
+			<source network='{{net['name']}}'/>
 			<model type='virtio'/>
 		</interface>
 		{% endfor %}
-		{% if type is 'sw'%}
+		{% if dtype is eq('switch')%}
 		<interface type='network'>
 			<source network='default'/>
 			<model type='virtio'/>
 		</interface>
 		{% endif %}
-		<serial type='pty'>
-			<target port='0'/>
-		</serial>
+		<!-- <serial type='pty'> -->
+		<!-- 	<target port='0'/> -->
+		<!-- </serial> -->
 		<console type='pty'>
-			<target type='serial' port='0'/>
+			<!-- <target type='serial' port='0'/> -->
 		</console>
 	</devices>
 </domain>

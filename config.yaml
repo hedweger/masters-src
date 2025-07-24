@@ -1,14 +1,17 @@
-devices:
-  - name: "sw1"
-    type: "switch"
-    connected_to:
-      - "pc1"
-      - "pc2"
+network:
+  address: "192.168.0.0/16"
+  
+rtus:
   - name: "pc1"
-    type: "rtu"
-    connected_to:
-      - "sw1"
+    address: "192.168.1.10"
   - name: "pc2"
-    type: "rtu"
-    connected_to:
-      - "sw1"
+    address: "192.168.1.20"
+
+switches:
+  - name: "sw1"
+    address: ""
+    connected:
+      - to: "pc1"
+        # gateway: "192.168.1.10"
+      - to: "pc2"
+        # gateway: "192.168.1.20"
