@@ -34,12 +34,10 @@
 			<model type='virtio'/>
 		</interface>
 		{% endfor %}
-		{% if dtype is eq('switch')%}
 		<interface type='network'>
 			<source network='default'/>
 			<model type='virtio'/>
 		</interface>
-		{% endif %}
 		<!-- <serial type='pty'> -->
 		<!-- 	<target port='0'/> -->
 		<!-- </serial> -->

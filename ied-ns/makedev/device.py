@@ -50,56 +50,76 @@ class Device:
             return [
                 "sleep 5",
                 "sudo systemctl restart systemd-networkd",
+                "sudo ip link set dev ens3 up",
+                "stty erase ^H",
             ]
         elif self.dev_type is DeviceType.SW:
             return [
-                "systemctl enable systemd-networkd",
-                "systemctl start systemd-networkd",
-                "systemctl disable networking",
-                "sysctl -p /etc/sysctl.d/99-ip-forward.conf",
-                "ip link add name br0 type bridge",
-                "ip link set dev ens2 master br0",
-                "ip link set dev ens3 master br0",
-                "ip link set dev br0 up",
-                "ip link set dev ens2 up",
-                "ip link set dev ens3 up",
+                # "ip link add name br0 type bridge",
+                # "ip link set dev ens2 master br0",
+                # "ip link set dev ens3 master br0",
+                # "ip link set dev br0 up",
+                # "ip link set dev ens2 up",
+                # "ip link set dev ens3 up",
+                "sudo systemctl restart systemd-networkd",
+                "stty erase ^H",
+                # "ip link set dev ens4 up",
             ]
         return []
 
     def startup_filewrites(self) -> list[FileWrite]:
         if self.dev_type is DeviceType.SW:
-            return [
-                FileWrite(
-                    path=f"/etc/systemd/network/0{i+3}-ens{i+2}.network",
-                    content=f"[Match]\nName=ens{i+2}\n\n[Network]\nBridge=br0\n",
-                    owner="root:root",
-                    permissions="0644",
-                )
-                for i, netw in enumerate(self.networks)
-            ] + [
-                FileWrite(
-                    path=f"/etc/systemd/network/01-br0.netdev",
-                    content=f"[NetDev]\nName=br0\nKind=bridge\n\n[Bridge]\nSTP=on\n",
-                    owner="root:root",
-                    permissions="0644",
-                )
-            ] + [
-                FileWrite(
-                    path=f"/etc/systemd/network/02-br0.network",
-                    content=f"[Match]\nName=br0\n\n[Network]\n",
-                    owner="root:root",
-                    permissions="0644",
-                )
-            ]
+            return (
+                [
+                    FileWrite(
+                        path=f"/etc/systemd/network/0{i+3}-ens{i+2}.network",
+                        content=f"[Match]\nName=ens{i+2}\n\n[Network]\nBridge=br0\n",
+                        owner="root:root",
+                        permissions="0644",
+                    )
+                    for i, netw in enumerate(self.networks)
+                ]
+                + [
+                    FileWrite(
+                        path=f"/etc/systemd/network/01-ens{len(self.networks)+2}.network",
+                        content=f"[Match]\nName=ens{len(self.networks)+2}\n\n[Network]\nAddress=192.168.122.4/24\nGateway=192.168.122.1\n",
+                        owner="root:root",
+                        permissions="0644",
+                    )
+                ]
+                + [
+                    FileWrite(
+                        path=f"/etc/systemd/network/01-br0.netdev",
+                        content=f"[NetDev]\nName=br0\nKind=bridge\n\n[Bridge]\nSTP=on\n",
+                        owner="root:root",
+                        permissions="0644",
+                    )
+                ]
+                + [
+                    FileWrite(
+                        path=f"/etc/systemd/network/02-br0.network",
+                        content=f"[Match]\nName=br0\n\n[Network]\n",
+                        owner="root:root",
+                        permissions="0644",
+                    )
+                ]
+            )
         elif self.dev_type is DeviceType.RTU:
             return [
                 FileWrite(
                     path=f"/etc/systemd/network/01-ens{i+2}.network",
-                    content=f"[Match]\nName=en*\nType=ether\n\n[Network]\nAddress={netw.src_ip}\n",
+                    content=f"[Match]\nName=ens{i+2}\nType=ether\n\n[Network]\nAddress={netw.src_ip}\n",
                     owner="root:root",
                     permissions="0644",
                 )
                 for i, netw in enumerate(self.networks)
+            ] + [
+                FileWrite(
+                    path=f"/etc/systemd/network/01-ens{len(self.networks)+2}.network",
+                    content=f"[Match]\nName=ens{len(self.networks)+2}\n\n[Network]\nAddress=192.168.122.{int(self.name[-1])+1}/24\nGateway=192.168.122.1\n",
+                    owner="root:root",
+                    permissions="0644",
+                )
             ]
         return []
 
