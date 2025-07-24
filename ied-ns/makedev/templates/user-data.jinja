@@ -1,21 +1,4 @@
 #cloud-config
-network:
-  version: 2
-  renderer: networkd
-  ethernets:
-    {% for conn in ud.connections %}
-    {{ conn.iface }}:
-      dhcp4: false
-      dhcp6: false
-      {% if ud.dev_type == 'rtu' %}
-      addresses: 
-        - {{ conn.src_ip }}
-      {% if conn.gateway %}
-      gateway4: 
-        - {{ conn.gateway }}
-      {% endif %}
-      {% endif %}
-    {% endfor %}
 
 groups:
   - admingroup

@@ -47,10 +47,22 @@ class Device:
                 "ip link set dev ens2 master br0",
                 "ip link set dev ens3 master br0",
                 "ip link set dev br0 up",
-                "sudo tcpdump -i br0"
+                "sudo tcpdump -i br0 not arp and not llc",
             ]
         else:
-            return []
+            cmds = []
+            cmds.append(
+                "sudo wget https://github.com/hedweger/masters-src/releases/download/client/ied-client"
+            )
+            cmds.append("sudo chmod +x /ied-client")
+            if self.name == "pc1":
+                cmds.append(
+                    "sudo wget https://github.com/hedweger/masters-src/releases/download/server/ied-server.tar"
+                )
+                cmds.append("sudo tar -xf /ied-server.tar")
+                cmds.append("sudo chmod +x /ied-server")
+                cmds.append("sudo /ied-server")
+            return cmds
 
     def startup_filewrites(self) -> list[FileWrite]:
         if self.dev_type is DeviceType.SW:

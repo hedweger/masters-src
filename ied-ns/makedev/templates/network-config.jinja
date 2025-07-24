@@ -8,6 +8,9 @@ ethernets:
     {% if dev_type == 'rtu' %}
     addresses: 
       - {{ conn.src_ip }}
+    nameservers:
+      addresses: 
+        - 8.8.8.8
     {% if conn.gateway %}
     gateway4: 
       {{ conn.gateway }}
