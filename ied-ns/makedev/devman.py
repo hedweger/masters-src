@@ -45,22 +45,28 @@ class DeviceManager:
                 address,
             )
             for conn in sw["connected"]:
-                self.create_network(
-                    src_name=name,
-                    dst_name=conn["to"],
-                    gtw_addr=""
-                )
+                self.create_network(src_name=name, dst_name=conn["to"], gtw_addr="")
         self.create_devices()
 
     def create_devices(self):
         for device in self.devices.values():
+            dev_addr = device.address
+            device.address = f'192.168.122.{int(device.name[-1])+1}/24'
+            device.add_network_connection(
+                network_name=f"default",
+                mac=next(self.mac_iter),
+                gateway="192.168.122.1",
+            )
+            device.address = dev_addr
             device.image_path = drive.qcow2(
                 f"{self.context}/{device.name}", device.name, True
             )
             seeds = cinit.prepare(
+                device.dev_type.value,
                 device.name,
                 device.startup_commands(),
                 device.startup_filewrites(),
+                device.networks,
                 f"{self.context}/{device.name}",
                 True,
             )
@@ -82,12 +88,12 @@ class DeviceManager:
         network_name = f"{src_name}-{dst_name}"
         dst_device.add_network_connection(
             network_name=network_name,
-            gateway=gateway,
+            gateway=None,
             mac=next(self.mac_iter),
         )
         src_device.add_network_connection(
             network_name=network_name,
-            gateway=gateway,
+            gateway=None,
             mac=next(self.mac_iter),
         )
         jenv = j2.Environment(

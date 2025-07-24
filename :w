@@ -72,17 +72,17 @@ def prepare(
         )
     )
     jtempl = jenv.get_template("network-config.jinja")
-    # if dev_type == "switch":
-    #     connections.append(
-    #         NetworkConnection(
-    #             name=f"br0",
-    #             iface=f"br0",
-    #             src_ip='',
-    #             mac='',
-    #             gateway='',
-    #         )
-    #     )
-    #
+    if dev_type == "switch":
+        connections.append(
+            NetworkConnection(
+                name=f"br0",
+                iface=f"br0",
+                src_ip='',
+                mac='',
+                gateway='',
+            )
+        )
+
     netw_out = jtempl.render(connections=connections, dev_type=dev_type)
     if write:
         os.makedirs(fp, exist_ok=True)

@@ -1,4 +1,22 @@
 #cloud-config
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    {% for conn in ud.connections %}
+    {{ conn.iface }}:
+      dhcp4: false
+      dhcp6: false
+      {% if ud.dev_type == 'rtu' %}
+      addresses: 
+        - {{ conn.src_ip }}
+      {% if conn.gateway %}
+      gateway4: 
+        - {{ conn.gateway }}
+      {% endif %}
+      {% endif %}
+    {% endfor %}
+
 groups:
   - admingroup
   - cloud-users
@@ -18,18 +36,9 @@ chpasswd:
     utko:{{ ud.password }}
   expire: false
 
+{% if ud.commands %}
 runcmd:
   {% for command in ud.commands %}
   - {{ command }}
   {% endfor %}
-
-write_files:
-  {% for write in ud.writes %}
-  - path: {{ write.path }}
-    content: |
-      {% for line in write.content.splitlines() %}
-      {{ line }}
-      {% endfor %}
-    owner: {{ write.owner }}
-    permissions: "{{ write.permissions }}"
-      {% endfor %}
+{% endif %}
