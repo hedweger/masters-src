@@ -3,6 +3,9 @@ images/*
 *.iso
 *qcow2
 
+# Go build artifacts
+main-go
+*.exe
 
 __pycache__/
 *.py[cod]
