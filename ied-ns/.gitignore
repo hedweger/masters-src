@@ -1,0 +1,11 @@
+# Go binary
+ied-ns
+
+# Temporary files
+tmp/
+*.qcow2
+*.iso
+
+# OS files
+.DS_Store
+Thumbs.db

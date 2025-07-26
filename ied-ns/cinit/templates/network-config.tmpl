@@ -1,0 +1,14 @@
+version: 2
+renderer: networkd
+ethernets:
+{{range .Connections}}  {{.Iface}}:
+    dhcp4: false
+    dhcp6: false
+{{if eq $.DevType "rtu"}}    addresses: 
+      - {{.SrcIP}}
+    nameservers:
+      addresses: 
+        - 8.8.8.8
+{{if .Gateway}}    gateway4: 
+      {{.Gateway}}
+{{end}}{{end}}{{end}}
