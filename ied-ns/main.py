@@ -12,4 +12,4 @@ def main(config: str):
 
 
 if __name__ == "__main__":
-    main(os.path.abspath("../config.yaml"))
+    main(os.path.abspath("./config.yaml"))
