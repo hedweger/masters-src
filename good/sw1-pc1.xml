@@ -1,0 +1,5 @@
+<network>
+	<name>sw1-pc1</name>
+	<forward mode='none'/>
+	<bridge name='sw1-pc1-br' stp='on' delay='0'/>
+</network>

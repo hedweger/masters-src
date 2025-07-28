@@ -1,0 +1,27 @@
+#cloud-config
+
+groups:
+  - admingroup
+  - cloud-users
+
+users:
+  - default
+  - name: utko
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    lock_passwd: false
+
+hostname: {{ .Hostname }}
+ssh_pwauth: true
+
+chpasswd:
+  list: |
+    utko:{{ .Password }}
+  expire: false
+
+{{- if .Commands }}
+runcmd:
+{{- range .Commands }}
+  - {{ . }}
+{{- end }}
+{{- end }}

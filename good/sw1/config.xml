@@ -1,0 +1,56 @@
+<domain type='kvm'>
+	<name>sw1</name>
+	<memory unit='MiB'>512</memory>
+	<vcpu placement='static'>1</vcpu>
+	<os>
+		<type arch='x86_64' machine='pc'>hvm</type>
+		<boot dev='hd'/>
+	</os>
+	<features>
+		<acpi/>
+		<apic/>
+		<pae/>
+	</features>
+	<clock offset='utc'/>
+	<on_poweroff>destroy</on_poweroff>
+	<on_reboot>restart</on_reboot>
+	<on_crash>destroy</on_crash>
+	<devices>
+		<disk type='file' device='disk'>
+			<driver name='qemu' type='qcow2' cache='none'/>
+			<source file='/home/th/workspace/masters/tmp/sw1/debian-12-sw1.qcow2'/>
+			<target dev='vda' bus='virtio'/>
+		</disk>
+		<disk type='file' device='cdrom'>
+			<driver name='qemu' type='raw'/>
+			<source file='/home/th/workspace/masters/tmp/sw1/cloudinit.iso'/>
+			<target dev='hdc' bus='ide'/>
+			<readonly/>
+		</disk>
+		<interface type='network'>
+			<mac address='52:54:00:12:23:01'/>
+			<source network='sw1-pc1'/>
+			<model type='virtio'/>
+		</interface>
+		<interface type='network'>
+			<mac address='52:54:00:12:25:01'/>
+			<source network='sw1-pc2'/>
+			<model type='virtio'/>
+		</interface>
+		<interface type='network'>
+			<mac address='52:54:00:12:28:01'/>
+			<source network='default'/>
+			<model type='virtio'/>
+		</interface>
+		<interface type='network'>
+			<source network='default'/>
+			<model type='virtio'/>
+		</interface>
+		<!-- <serial type='pty'> -->
+		<!-- 	<target port='0'/> -->
+		<!-- </serial> -->
+		<console type='pty'>
+			<!-- <target type='serial' port='0'/> -->
+		</console>
+	</devices>
+</domain>

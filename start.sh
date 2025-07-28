@@ -2,7 +2,7 @@
 set -euo pipefail
 
 declare -a NET_NAMES=( "sw1-pc1" "sw1-pc2" )
-declare -a NET_XML=(   "tmp/sw1-pc1.xml" "tmp/sw1-pc2.xml" )
+declare -a NET_XML=(   "tmp/netw-sw1-pc1.xml" "tmp/netw-sw1-pc2.xml" )
 
 echo "==> Rebuilding networks..."
 

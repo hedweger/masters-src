@@ -1,0 +1,12 @@
+version: 2
+renderer: networkd
+ethernets:
+  ens2:
+    dhcp4: false
+    dhcp6: false
+  ens3:
+    dhcp4: false
+    dhcp6: false
+  ens4:
+    dhcp4: false
+    dhcp6: false

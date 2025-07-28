@@ -1,5 +1,5 @@
 network:
-  address: "192.168.0.0/16"
+  address: "192.168.1.0/24"
   
 rtus:
   - name: "pc1"
@@ -12,6 +12,13 @@ switches:
     address: ""
     connected:
       - to: "pc1"
-        # gateway: "192.168.1.10"
+  - name: "sw2"
+    address: ""
+    connected:
       - to: "pc2"
-        # gateway: "192.168.1.20"
+  - name: "sw3"
+    address: ""
+    connected:
+      - to: "sw1"
+      - to: "sw2"
+

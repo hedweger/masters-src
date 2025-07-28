@@ -1,6 +1,0 @@
-<network>
-  <name>sw1-pc2</name>
-  <forward mode='none'/>
-  <bridge name='virbr20' stp='on' delay='0'/>
-  <ip address='192.168.20.1' netmask='255.255.255.0'/>
-</network>

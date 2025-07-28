@@ -1,0 +1,26 @@
+version: 2
+renderer: networkd
+ethernets:
+{{- range .Connections }}
+  {{ .Interface }}:
+    dhcp4: false
+    dhcp6: false
+    {{- if eq $.DeviceType "rtu" }}
+    addresses: 
+      - {{ .SourceIP }}
+    nameservers:
+      addresses: 
+        - 8.8.8.8
+    {{- if eq .Gateway nil }}
+    gateway4: {{ .Gateway }}
+    {{- end }}
+    {{- end }}
+{{- end }}
+{{- if eq .DeviceType "switch" }}
+bridges:
+  br0:
+    interfaces: [{{- range $i, $e := .Connections }}{{if $i}}, {{end}}{{ .Interface }}{{- end }}]
+    parameters:
+      stp: false
+      forward-delay: 0
+{{- end}}

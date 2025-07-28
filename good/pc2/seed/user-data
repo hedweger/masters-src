@@ -1,0 +1,24 @@
+#cloud-config
+
+groups:
+  - admingroup
+  - cloud-users
+
+users:
+  - default
+  - name: utko
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    lock_passwd: false
+
+hostname: pc2
+ssh_pwauth: true
+
+chpasswd:
+  list: |
+    utko:root
+  expire: false
+
+runcmd:
+  - sudo wget https://github.com/hedweger/masters-src/releases/download/client/ied-client
+  - sudo chmod +x /ied-client

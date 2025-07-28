@@ -1,0 +1,27 @@
+#cloud-config
+
+groups:
+  - admingroup
+  - cloud-users
+
+users:
+  - default
+  - name: utko
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    lock_passwd: false
+
+hostname: sw1
+ssh_pwauth: true
+
+chpasswd:
+  list: |
+    utko:root
+  expire: false
+
+runcmd:
+  - ip link add name br0 type bridge
+  - ip link set dev ens2 master br0
+  - ip link set dev ens3 master br0
+  - ip link set dev br0 up
+  - sudo tcpdump -i br0 not arp and not llc
