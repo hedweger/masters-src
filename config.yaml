@@ -1,3 +1,4 @@
+binary_path: "~/workspace/masters/rtu/"
 network:
   address: "192.168.1.0/24"
   

@@ -18,6 +18,7 @@ type Manager struct {
 	MacGen         *MACGen
 	IpGen          *IPGen
 	Networks       []string
+	cfg            *config.Config
 	outputDir      string
 	cleanDrivePath string
 	ifaceCount     int
@@ -38,16 +39,18 @@ func InitManager(cfg *config.Config, outputDir string) *Manager {
 		ifaceCount:     1,
 	}
 
-	if err := manager.initializeRTUs(cfg); err != nil {
-		log.Fatalf("[ERROR] %s", err)
-	}
-
-	if err := manager.initializeSwitches(cfg); err != nil {
-		log.Fatalf("[ERROR] %s", err)
-	}
-	manager.prepareDevices()
-
 	return manager
+}
+
+func (m *Manager) Deploy() {
+	if err := m.initializeRTUs(m.cfg); err != nil {
+		log.Fatalf("[ERROR] %s", err)
+	}
+
+	if err := m.initializeSwitches(m.cfg); err != nil {
+		log.Fatalf("[ERROR] %s", err)
+	}
+	m.prepareDevices()
 }
 
 func (m *Manager) StartVMs() {
