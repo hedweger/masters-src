@@ -4,7 +4,7 @@ import (
 	"flag"
 	"log"
 	"net/http"
-	"scada-simu/internal/managment"
+	"scada-simu/internal/management"
 )
 
 func main() {
@@ -20,7 +20,7 @@ func main() {
 		*outputDir = "tmp/"
 	}
 
-	server := managment.NewServiceServer(*configPath, *outputDir)
+	server := management.NewServiceServer(*configPath, *outputDir)
 	log.Printf("[LOG] starting service server on localhost:8080")
 	if err := http.ListenAndServe(":8080", server); err != nil {
 		log.Fatalf("[ERROR] Failed to start server: %v", err)

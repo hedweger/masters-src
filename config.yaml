@@ -1,4 +1,5 @@
-binary_path: "~/workspace/masters/rtu/"
+binary_path: "/home/th/workspace/masters/simu/rtu-bin/"
+frontend_path: "/home/th/workspace/masters/simu/cmd/service-station/frontend/"
 network:
   address: "192.168.1.0/24"
   

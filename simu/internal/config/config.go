@@ -9,10 +9,11 @@ import (
 )
 
 type Config struct {
-	Network    NetworkConfig  `yaml:"network"`
-	RTUs       []DeviceConfig `yaml:"rtus"`
-	Switches   []DeviceConfig `yaml:"switches"`
-	BinaryPath string         `yaml:"binary_path"`
+	Network      NetworkConfig  `yaml:"network"`
+	RTUs         []DeviceConfig `yaml:"rtus"`
+	Switches     []DeviceConfig `yaml:"switches"`
+	BinaryPath   string         `yaml:"binary_path"`
+	FrontendPath string         `yaml:"frontend_path"`
 }
 
 type NetworkConfig struct {

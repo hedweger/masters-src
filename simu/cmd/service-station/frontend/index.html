@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title></title>
+    <style>
+      body {
+        background-color: black;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Welcome to the Service Station</h1>
+    <p>Click the links below to download the RTU binaries:</p>
+    <ul>
+      <li><a href="/rtu-client/" target="_blank">Download RTU Client</a></li>
+      <li><a href="/rtu-server/" target="_blank">Download RTU Server</a></li>
+    </ul>
+    <form id="deployForm">
+      <label for="config">Configuration:</label>
+      <input type="text" id="config" name="config" required />
+      <br />
+      <label for="output">Output Directory:</label>
+      <input type="text" id="output" name="output" required />
+      <br />
+      <button type="submit">Deploy!!</button>
+    </form>
+  </body>
+</html>
