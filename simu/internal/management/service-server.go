@@ -1,6 +1,7 @@
 package management
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -25,9 +26,27 @@ func (s *ServiceServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.serveClientBinary(w, r)
 	case "/rtu-server/":
 		s.serveServerBinary(w, r)
+	case "/api/deploy":
+		s.handleDeploy(w, r)
+	case "/api/status":
+		s.handleStatus(w, r)
 	default:
 		http.NotFound(w, r)
 	}
+}
+
+func (s *ServiceServer) runDeployment(cfg *config.Config, outputDir string) {
+	log.Printf("[LOG] Starting VM deployment with config and output dir: %s", outputDir)
+	manager := device.InitManager(cfg, outputDir)
+	manager.Config = cfg
+	manager.Deploy()
+	manager.StartVMs()
+	log.Printf("[LOG] VM deployment completed")
+}
+
+func (s *ServiceServer) sendResponse(w http.ResponseWriter, resp DeploymentResponse) {
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (s *ServiceServer) serveDashboard(w http.ResponseWriter, r *http.Request) {
@@ -59,16 +78,12 @@ func (s *ServiceServer) serveServerBinary(w http.ResponseWriter, r *http.Request
 	http.ServeFile(w, r, path)
 }
 
-func NewServiceServer(cfg_path string, outputDir string) *ServiceServer {
-	cfg, err := config.LoadConfig(cfg_path)
-	if err != nil {
-		log.Fatalf("[ERROR] Failed to load configuration: %s | %v", cfg_path, err)
-	}
-
+// @TODO avoid hardcoding paths
+func NewServiceServer() *ServiceServer {
 	return &ServiceServer{
-		deviceManager: device.InitManager(cfg, outputDir),
+		deviceManager: nil,
 		httpClient:    &http.Client{},
-		binaryPath:    cfg.BinaryPath,
-		frontendPath:  cfg.FrontendPath,
+		binaryPath:    "/home/th/workspace/masters/simu/rtu-bin/",
+		frontendPath:  "/home/th/workspace/masters/simu/cmd/service-station/frontend/",
 	}
 }

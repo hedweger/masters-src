@@ -18,7 +18,7 @@ type Manager struct {
 	MacGen         *MACGen
 	IpGen          *IPGen
 	Networks       []string
-	cfg            *config.Config
+	Config            *config.Config
 	outputDir      string
 	cleanDrivePath string
 	ifaceCount     int
@@ -35,7 +35,7 @@ func InitManager(cfg *config.Config, outputDir string) *Manager {
 		IpGen:          ipgen,
 		Networks:       []string{},
 		outputDir:      outputDir,
-		cleanDrivePath: "../debian-12-genericcloud-amd64.qcow2",
+		cleanDrivePath: "/home/th/workspace/masters/debian-12-genericcloud-amd64.qcow2",
 		ifaceCount:     1,
 	}
 
@@ -43,11 +43,11 @@ func InitManager(cfg *config.Config, outputDir string) *Manager {
 }
 
 func (m *Manager) Deploy() {
-	if err := m.initializeRTUs(m.cfg); err != nil {
+	if err := m.initializeRTUs(m.Config); err != nil {
 		log.Fatalf("[ERROR] %s", err)
 	}
 
-	if err := m.initializeSwitches(m.cfg); err != nil {
+	if err := m.initializeSwitches(m.Config); err != nil {
 		log.Fatalf("[ERROR] %s", err)
 	}
 	m.prepareDevices()
