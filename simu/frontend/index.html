@@ -37,8 +37,42 @@
       </form>
     </div>
 
-    <div id="deployment-status">
-      <!-- Status updates will appear here -->
-    </div>
+    <div id="deployment-status"></div>
+
+    <h2>Upload SCD File</h2>
+    <form
+      hx-post="/api/scd/upload"
+      hx-target="#xmlBox"
+      hx-trigger="change from:#scdFileInput"
+      hx-encoding="multipart/form-data"
+      hx-swap="innerHTML"
+    >
+      <div style="display: flex; flex-direction: row">
+        <div style="display: flex; flex-direction: column">
+          <input
+            type="file"
+            name="scdfile"
+            accept=".scd,.xml"
+            id="scdFileInput"
+            required
+          />
+          <button
+            hx-get="/api/scd/view"
+            hx-target="#xmlBox"
+            hx-swap="innerHTML"
+          >
+            View config
+          </button>
+          <button
+            hx-get="/api/scd/model"
+            hx-target="#xmlBox"
+            hx-swap="innerHTML"
+          >
+            View Model
+          </button>
+        </div>
+        <textarea id="xmlBox" rows="20" cols="80" readonly></textarea>
+      </div>
+    </form>
   </body>
 </html>
