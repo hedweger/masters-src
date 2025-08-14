@@ -3,7 +3,7 @@ package templates
 import (
 	"bytes"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -40,6 +40,6 @@ func WriteNetworkConfig(fp string, context NetworkConfigContext) (string, error)
 	if err != nil {
 		return "", fmt.Errorf("failed to get absolute path for network-config: %w", err) // is this hittable????
 	}
-	log.Println("[INFO] Wrote network-config to", resPath)
+	slog.Debug("Network config written", "path", resPath)
 	return resPath, nil
 }

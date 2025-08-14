@@ -2,12 +2,12 @@ package device
 
 import (
 	"fmt"
-	"log"
-	"net"
+	"log/slog"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"scada-simu/internal/templates"
+	"strconv"
 )
 
 type DeviceType string
@@ -22,12 +22,14 @@ type NetworkConnection struct {
 	Interface string
 	SourceIP  string
 	MAC       string
-	Gateway   net.IP
+	Gateway   string
 }
 
 type Device struct {
 	Type              DeviceType
 	Name              string
+	Memory            int
+	VCPU              int
 	Networks          []NetworkConnection
 	ImagePath         string
 	SeedImagePath     string
@@ -48,8 +50,8 @@ func (d *Device) CreateLibvirtConfig(outputDir string) error {
 
 	deviceContext := templates.VirtDeviceContext{
 		Name:     d.Name,
-		RAM:      "512",
-		VCPU:     1,
+		RAM:      strconv.Itoa(d.Memory),
+		VCPU:     d.VCPU,
 		DiskPath: d.ImagePath,
 		SeedPath: d.SeedImagePath,
 		Networks: make([]templates.VirtDevNetworkContext, 0, len(d.Networks)),
@@ -65,7 +67,7 @@ func (d *Device) CreateLibvirtConfig(outputDir string) error {
 	var err error
 	d.ImagePath, err = templates.WriteVirtDevice(outpath, deviceContext)
 	if err != nil {
-		log.Fatalf("%s: %v", d.Name, err)
+		return err
 	}
 	return nil
 }
@@ -79,9 +81,11 @@ func (d *Device) CreateCloudInitConfig(outputDir string) {
 		Hostname: d.Name,
 		Password: "root",
 		Commands: d.commands(),
+		Packages: d.packages(),
 	})
 	if err != nil {
-		log.Fatalf("%s: %s", d.Name, err)
+		slog.Error("failed to write user data", "device", d.Name, "error", err)
+		return
 	}
 
 	netwCfgs := make([]templates.NetworkContext, 0, len(d.Networks))
@@ -89,7 +93,7 @@ func (d *Device) CreateCloudInitConfig(outputDir string) {
 		netwCfgs = append(netwCfgs, templates.NetworkContext{
 			Interface: conn.Interface,
 			SourceIP:  conn.SourceIP,
-			Gateway:   conn.Gateway.String(),
+			Gateway:   conn.Gateway,
 		})
 	}
 	d.NetworkConfigPath, err = templates.WriteNetworkConfig(seed_path, templates.NetworkConfigContext{
@@ -97,12 +101,14 @@ func (d *Device) CreateCloudInitConfig(outputDir string) {
 		DeviceType:  string(d.Type),
 	})
 	if err != nil {
-		log.Fatalf("%s: %s", d.Name, err)
+		slog.Error("failed to write network config", "device", d.Name, "error", err)
+		return
 	}
 
 	metaDataPath := fmt.Sprintf("%s/meta-data", seed_path)
 	if err := os.WriteFile(metaDataPath, []byte(""), 0644); err != nil {
-		log.Fatalf("%s: %v", d.Name, err)
+		slog.Error("failed to write meta-data file", "device", d.Name, "error", err)
+		return
 	}
 	d.MetaDataPath, _ = filepath.Abs(metaDataPath)
 }
@@ -111,41 +117,44 @@ func (d *Device) CreateSeedImage(outputDir string) error {
 	outpath := fmt.Sprintf("%s/%s/seed.iso", outputDir, d.Name)
 	outpath, err := filepath.Abs(outpath)
 	if err != nil {
-		return fmt.Errorf("Failed to find absolute path for %s: %w", outpath, err)
+		return err
 	}
 	executor := "genisoimage"
 
 	cmd := exec.Command(executor, "-o", outpath, "-volid", "cidata", "-joliet", "-rock", d.UserDataPath, d.NetworkConfigPath, d.MetaDataPath)
-	log.Printf("[INFO] Executing %s", cmd.String())
+	slog.Info("Creating seed image", "command", cmd.String(), "output", outpath)
 	err = cmd.Run()
 	if err != nil {
-		return fmt.Errorf("Failed to execute %s in %s: %w", executor, outpath, err)
+		return err
 	}
 	d.SeedImagePath, err = filepath.Abs(outpath)
 	if err != nil {
-		return fmt.Errorf("Failed to find %s, %w", d.SeedImagePath, err)
+		return err
 	}
 	return nil
 }
 
-func (d *Device) AddNetworkConnection(name string, to string, src_ip string, mac string) error {
-	if d.Type == TypeSwitch {
-		src_ip = ""
-	}
-
+func (d *Device) AddNetworkConnection(name string, to string, gw string, src_ip string, mac string) error {
 	iface := fmt.Sprintf("ens%d", d.ifaceCount)
 	d.Networks = append(d.Networks, NetworkConnection{
 		Name:      name,
 		Interface: iface,
 		SourceIP:  src_ip,
-		Gateway:   nil,
+		Gateway:   gw,
 		MAC:       mac,
 	})
-	log.Printf("[INFO] Added L2 connection %s to device %s on %s", name, d.Name, iface)
+	slog.Info("Added L2 connection", "device", d.Name, "connection", name, "interface", iface)
 	d.ifaceCount++
 	return nil
 }
 
+func (d *Device) packages() []string {
+	return []string{
+		"iperf3",
+		"bash",
+	}
+}
+
 func (d *Device) commands() []string {
-	return []string{"etst", "test"}
+	return []string{""}
 }

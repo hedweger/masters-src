@@ -1,0 +1,19 @@
+network:
+  address: "192.168.122.0/24"
+  
+rtus:
+  - name: "pc1"
+    memory: 256
+    vcpu: 1
+  - name: "pc2"
+    memory: 256
+    vcpu: 1
+
+switches:
+  - name: "sw1"
+    memory: 256
+    vcpu: 1
+    address: ""
+    connected:
+      - to: "pc1"
+      - to: "pc2"

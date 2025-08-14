@@ -3,7 +3,7 @@ package templates
 import (
 	"bytes"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -13,6 +13,7 @@ type UserDataContext struct {
 	Hostname string
 	Password string
 	Commands []string
+	Packages []string
 }
 
 func WriteUserData(fp string, context UserDataContext) (string, error) {
@@ -35,6 +36,6 @@ func WriteUserData(fp string, context UserDataContext) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("failed to get absolute path for user-data: %w", err) // is this hittable????
 	}
-	log.Println("[INFO] Wrote user-data config to", resPath)
+	slog.Info("User data config written", "path", resPath)
 	return resPath, nil
 }

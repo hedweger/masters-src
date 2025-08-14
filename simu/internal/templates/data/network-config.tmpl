@@ -8,18 +8,28 @@ ethernets:
     {{- if eq $.DeviceType "rtu" }}
     addresses: 
       - {{ .SourceIP }}
+    {{ if ne .Gateway nil }}
+    routes:
+      - to: default
+        via: {{ .Gateway }}
+    {{- end }}
     nameservers:
       addresses: 
         - 8.8.8.8
-    {{- if eq .Gateway nil }}
-    gateway4: {{ .Gateway }}
-    {{- end }}
     {{- end }}
 {{- end }}
 {{- if eq .DeviceType "switch" }}
 bridges:
   br0:
     interfaces: [{{- range $i, $e := .Connections }}{{if $i}}, {{end}}{{ .Interface }}{{- end }}]
+    addresses:
+      - 192.168.122.254/24
+    routes:
+      - to: default
+        via: 192.168.122.1
+    nameservers:
+      addresses: 
+        - 8.8.8.8
     parameters:
       stp: false
       forward-delay: 0

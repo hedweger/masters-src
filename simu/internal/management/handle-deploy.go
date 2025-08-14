@@ -3,9 +3,19 @@ package management
 import (
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"scada-simu/internal/config"
+	"scada-simu/internal/device"
+)
+
+type DeploymentStatus string
+
+const (
+	StatusDeploying DeploymentStatus = "deploying"
+	StatusCompleted DeploymentStatus = "completed"
+	StatusError     DeploymentStatus = "error"
 )
 
 type DeploymentRequest struct {
@@ -17,6 +27,15 @@ type DeploymentResponse struct {
 	Success bool   `json:"success"`
 	Message string `json:"message"`
 	Status  string `json:"status"`
+}
+
+func (s *ServiceServer) runDeployment(cfg *config.Config, outputDir string) {
+	slog.Info("Starting VM deployment", "outputDir", outputDir)
+	manager := device.InitManager(cfg, outputDir)
+	manager.Config = cfg
+	manager.Deploy()
+	manager.StartVMs()
+	slog.Info("VM deployment completed", "outputDir", outputDir)
 }
 
 func (s *ServiceServer) handleDeploy(w http.ResponseWriter, r *http.Request) {
@@ -48,16 +67,19 @@ func (s *ServiceServer) handleDeploy(w http.ResponseWriter, r *http.Request) {
 		req.OutputDir = "tmp/"
 	}
 
-	if _, err := os.Stat(req.ConfigPath); os.IsNotExist(err) {
+	configPath := s.Config.LocalPath + "/" + req.ConfigPath
+	outputPath := s.Config.LocalPath + "/" + req.OutputDir
+	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		s.sendResponse(w, DeploymentResponse{
 			Success: false,
-			Message: fmt.Sprintf("Configuration file not found: %s", req.ConfigPath),
+			Message: fmt.Sprintf("Configuration file not found: %s", configPath),
 			Status:  "error",
 		})
 		return
 	}
+	slog.Info("Loading configuration", "configPath", configPath)
 
-	cfg, err := config.LoadConfig(req.ConfigPath)
+	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
 		s.sendResponse(w, DeploymentResponse{
 			Success: false,
@@ -76,11 +98,11 @@ func (s *ServiceServer) handleDeploy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	go s.runDeployment(cfg, req.OutputDir)
+	go s.runDeployment(cfg, outputPath)
 
 	s.sendResponse(w, DeploymentResponse{
-		Success: true,
-		Message: "Deployment started successfully",
-		Status:  "deploying",
+		Success: false,
+		Message: "Deployment started succesfully",
+		Status:  string(StatusDeploying),
 	})
 }

@@ -7,6 +7,7 @@ groups:
 users:
   - default
   - name: utko
+    shell: /bin/bash
     sudo: ALL=(ALL) NOPASSWD:ALL
     groups: users, admin
     lock_passwd: false
@@ -18,6 +19,15 @@ chpasswd:
   list: |
     utko:{{ .Password }}
   expire: false
+
+package_update: true
+package_upgrade: true
+{{- if .Packages }}
+packages:
+{{- range .Packages }}
+  - {{ . }}
+{{- end }}
+{{- end }}
 
 {{- if .Commands }}
 runcmd:

@@ -2,7 +2,7 @@ package device
 
 import (
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"scada-simu/internal/config"
@@ -18,7 +18,7 @@ type Manager struct {
 	MacGen         *MACGen
 	IpGen          *IPGen
 	Networks       []string
-	Config            *config.Config
+	Config         *config.Config
 	outputDir      string
 	cleanDrivePath string
 	ifaceCount     int
@@ -27,7 +27,8 @@ type Manager struct {
 func InitManager(cfg *config.Config, outputDir string) *Manager {
 	ipgen, err := DefaultIPGenerator(cfg.Network.Address)
 	if err != nil {
-		log.Fatalf("[ERROR] %v", err)
+		slog.Error("Failed to initialize IP generator", "error", err)
+		return nil
 	}
 	manager := &Manager{
 		Devices:        make(map[string]*Device),
@@ -44,37 +45,38 @@ func InitManager(cfg *config.Config, outputDir string) *Manager {
 
 func (m *Manager) Deploy() {
 	if err := m.initializeRTUs(m.Config); err != nil {
-		log.Fatalf("[ERROR] %s", err)
+		slog.Error("Failed to initialize RTUs", "error", err)
+		return
 	}
 
 	if err := m.initializeSwitches(m.Config); err != nil {
-		log.Fatalf("[ERROR] %s", err)
+		slog.Error("Failed to initialize switches", "error", err)
+		return
 	}
 	m.prepareDevices()
 }
 
 func (m *Manager) StartVMs() {
-	fmt.Println("")
-
 	conn, err := libvirt.NewConnect("qemu:///system")
 	if err != nil {
-		log.Fatalf("[ERROR] Failed to connect to libvirt: %v", err)
+		slog.Error("Failed to connect to libvirt", "error", err)
+		return
 	}
 	defer conn.Close()
 
 	for _, networkXmlPath := range m.Networks {
 		networkName := strings.TrimSuffix(filepath.Base(networkXmlPath), ".xml")
-		fmt.Printf("Defining/starting network: %s\n", networkName)
-
 		netw, err := conn.LookupNetworkByName(networkName)
 		if err != nil {
 			xmlBytes, readErr := os.ReadFile(networkXmlPath)
 			if readErr != nil {
-				log.Fatalf("[ERROR] Failed to read network XML: %s: %v", networkXmlPath, readErr)
+				slog.Error("Failed to read network XML", "path", networkXmlPath, "error", readErr)
+				return
 			}
 			netw, err = conn.NetworkDefineXML(string(xmlBytes))
 			if err != nil {
-				log.Fatalf("[ERROR] Failed to define network %s: %v", networkName, err)
+				slog.Error("Failed to define network", "name", networkName, "error", err)
+				return
 			}
 			defer netw.Free()
 		} else {
@@ -83,45 +85,48 @@ func (m *Manager) StartVMs() {
 
 		active, err := netw.IsActive()
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to check if network %s is active: %v", networkName, err)
+			slog.Error("Failed to check network status", "name", networkName, "error", err)
+			return
 		}
 		if !active {
 			if err := netw.Create(); err != nil {
-				log.Fatalf("[ERROR] Failed to start network %s: %v", networkName, err)
+				slog.Error("Failed to start network", "name", networkName, "error", err)
+				return
 			}
 		}
 	}
 
 	for _, device := range m.Devices {
 		deviceXmlPath := filepath.Join(m.outputDir, device.Name, device.Name+".xml")
-		fmt.Printf("Defining/starting device: %s\n", device.Name)
-
 		dom, err := conn.LookupDomainByName(device.Name)
 		if err == nil {
 			defer dom.Free()
 			active, _ := dom.IsActive()
 			if active {
 				if err := dom.Destroy(); err != nil {
-					log.Printf("[WARN] Failed to destroy running domain %s: %v", device.Name, err)
+					slog.Warn("Failed to destroy active domain", "name", device.Name, "error", err)
 				}
 			}
 			if err := dom.UndefineFlags(libvirt.DOMAIN_UNDEFINE_MANAGED_SAVE | libvirt.DOMAIN_UNDEFINE_SNAPSHOTS_METADATA | libvirt.DOMAIN_UNDEFINE_NVRAM); err != nil {
-				log.Printf("[WARN] Failed to undefine domain %s: %v", device.Name, err)
+				slog.Warn("Failed to undefine domain", "name", device.Name, "error", err)
 			}
 		}
 
 		xmlBytes, readErr := os.ReadFile(deviceXmlPath)
 		if readErr != nil {
-			log.Fatalf("[ERROR] Failed to read domain XML: %s: %v", deviceXmlPath, readErr)
+			slog.Error("Failed to read device XML", "path", deviceXmlPath, "error", readErr)
+			return
 		}
 		dom, err = conn.DomainDefineXML(string(xmlBytes))
 		if err != nil {
-			log.Fatalf("[ERROR] Failed to define domain %s: %v", device.Name, err)
+			slog.Error("Failed to define domain", "name", device.Name, "error", err)
+			return
 		}
 		defer dom.Free()
 
 		if err := dom.Create(); err != nil {
-			log.Fatalf("[ERROR] Failed to start domain %s: %v", device.Name, err)
+			slog.Error("Failed to start domain", "name", device.Name, "error", err)
+			return
 		}
 	}
 }
@@ -130,11 +135,13 @@ func (m *Manager) prepareDevices() {
 	for _, device := range m.Devices {
 		device.CreateCloudInitConfig(m.outputDir)
 		if err := device.CreateSeedImage(m.outputDir); err != nil {
-			log.Fatalf("[ERROR] %v", err)
+			slog.Error("Failed to create seed image", "device", device.Name, "error", err)
+			return
 		}
 		device.CreateSeedImage(m.outputDir)
 		if err := device.CreateLibvirtConfig(m.outputDir); err != nil {
-			log.Fatalf("[ERROR] %v", err)
+			slog.Error("Failed to create libvirt config", "device", device.Name, "error", err)
+			return
 		}
 	}
 }
@@ -144,15 +151,6 @@ func (m *Manager) initializeSwitches(cfg *config.Config) error {
 		if sw.Name == "" {
 			sw.Name = fmt.Sprintf("sw%d", i+1)
 		}
-
-		// @TODO: Do switches need addresses?
-		// For later management we should at least have a connection to historian.
-		// if sw.Address != "" {
-		// 	err := m.Netman.ValidateAddress(sw.Address)
-		// 	if err != nil {
-		// 		return fmt.Errorf("failed to validate address for switch %s: %w", sw.Name, err)
-		// 	}
-		// }
 
 		device_path := fmt.Sprintf("%s/%s", m.outputDir, sw.Name)
 		os.Mkdir(device_path, 0755)
@@ -165,24 +163,32 @@ func (m *Manager) initializeSwitches(cfg *config.Config) error {
 		device := &Device{
 			Type:       TypeSwitch,
 			Name:       sw.Name,
+			Memory:     sw.Memory,
+			VCPU:       sw.VCPU,
 			ImagePath:  image,
 			ifaceCount: 2,
 		}
+		device.AddNetworkConnection("default", "default", "192.168.122.1", m.IpGen.NextWCidr(), m.MacGen.Next())
 
 		for j, conn := range sw.Connected {
 			if conn.To == "" {
-				log.Println("[WARN] Switch", sw.Name, "connection", j+1, "has no target device, skipping")
+				slog.Warn(fmt.Sprintf("%s: Connection %d has no 'To' device specified, skipping.", sw.Name, j+1))
 				continue
 			}
 			net_name := fmt.Sprintf("%s-%s", sw.Name, conn.To)
 			net_bridge := fmt.Sprintf("virbr%d", m.ifaceCount)
-			device.AddNetworkConnection(net_name, device.Name, m.IpGen.NextWCidr(), m.MacGen.Next())
+			// SW side of connection should not have a gateway, so we use an empty string
+			device.AddNetworkConnection(net_name, device.Name, "", m.IpGen.NextWCidr(), m.MacGen.Next())
 			dest := m.Devices[conn.To]
 			if dest == nil {
-				panic(fmt.Errorf("%s: 'To' device %s does not exist.", device.Name, conn.To))
+				return fmt.Errorf("%s: 'To' device %s does not exist.", device.Name, conn.To)
 			}
-			dest.AddNetworkConnection(net_name, device.Name, m.IpGen.NextWCidr(), m.MacGen.Next())
-			m.Networks = append(m.Networks, m.createNetwork(net_name, net_bridge))
+			dest.AddNetworkConnection(net_name, device.Name, "192.168.122.1", m.IpGen.NextWCidr(), m.MacGen.Next())
+			netw, err := m.createNetwork(net_name, net_bridge)
+			if err != nil {
+				return fmt.Errorf("Failed to create network %s: %w", net_name, err)
+			}
+			m.Networks = append(m.Networks, netw)
 			m.ifaceCount++
 		}
 
@@ -191,15 +197,15 @@ func (m *Manager) initializeSwitches(cfg *config.Config) error {
 	return nil
 }
 
-func (m *Manager) createNetwork(name string, bridge string) string {
+func (m *Manager) createNetwork(name string, bridge string) (string, error) {
 	path, err := templates.WriteVirtNetwork(m.outputDir, templates.VirtNetworkContext{
 		Name:   name,
 		Bridge: bridge,
 	})
 	if err != nil {
-		log.Fatalf("[ERROR] %s: %v", name, err)
+		return "", err
 	}
-	return path
+	return path, nil
 }
 
 func (m *Manager) initializeRTUs(cfg *config.Config) error {
@@ -209,7 +215,7 @@ func (m *Manager) initializeRTUs(cfg *config.Config) error {
 		}
 
 		if rtu.Address == "" {
-			panic("@TODO: empty address for RTUs")
+			rtu.Address = m.IpGen.NextWCidr()
 		}
 
 		device_path := fmt.Sprintf("%s/%s", m.outputDir, rtu.Name)
@@ -224,6 +230,8 @@ func (m *Manager) initializeRTUs(cfg *config.Config) error {
 		device := &Device{
 			Type:       TypeRTU,
 			Name:       rtu.Name,
+			Memory:     rtu.Memory,
+			VCPU:       rtu.VCPU,
 			ImagePath:  image,
 			ifaceCount: 2,
 		}

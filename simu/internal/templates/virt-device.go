@@ -3,7 +3,7 @@ package templates
 import (
 	"bytes"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -43,6 +43,6 @@ func WriteVirtDevice(fp string, context VirtDeviceContext) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Failed to get absolute path for virt-device config: %w", err) // is this hittable????
 	}
-	log.Println("[INFO] Wrote virt-device config to", resPath)
+	slog.Info("Virt device config written", "path", resPath)
 	return resPath, nil
 }

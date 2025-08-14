@@ -3,7 +3,7 @@ package templates
 import (
 	"bytes"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"text/template"
@@ -35,6 +35,6 @@ func WriteVirtNetwork(fp string, context VirtNetworkContext) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("Failed to get absolute path for virt-network config: %w", err) // is this hittable????
 	}
-	log.Println("[INFO] Wrote virt-network config to", resPath)
+	slog.Info("Virt network config written", "path", resPath)
 	return resPath, nil
 }

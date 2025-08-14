@@ -2,9 +2,8 @@ package management
 
 import (
 	"encoding/json"
-	"log"
+	"log/slog"
 	"net/http"
-	"scada-simu/internal/config"
 	"scada-simu/internal/device"
 )
 
@@ -40,18 +39,9 @@ func (s *ServiceServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	case "/api/status":
 		s.handleStatus(w, r)
 	default:
-		log.Printf("[LOG] 404 Not Found: %s", r.URL.Path)
+		slog.Error("404 Not Found", "path", r.URL.Path)
 		http.NotFound(w, r)
 	}
-}
-
-func (s *ServiceServer) runDeployment(cfg *config.Config, outputDir string) {
-	log.Printf("[LOG] Starting VM deployment with config and output dir: %s", outputDir)
-	manager := device.InitManager(cfg, outputDir)
-	manager.Config = cfg
-	manager.Deploy()
-	manager.StartVMs()
-	log.Printf("[LOG] VM deployment completed")
 }
 
 func (s *ServiceServer) sendResponse(w http.ResponseWriter, resp DeploymentResponse) {
@@ -61,7 +51,6 @@ func (s *ServiceServer) sendResponse(w http.ResponseWriter, resp DeploymentRespo
 
 func (s *ServiceServer) serveDashboard(w http.ResponseWriter, r *http.Request) {
 	index_path := s.Config.LocalPath + "/frontend/index.html"
-	log.Println("[LOG] Serving dashboard from " + index_path)
 	http.ServeFile(w, r, index_path)
 }
 

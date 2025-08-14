@@ -1,0 +1,16 @@
+test: true
+network:
+  address: "192.168.1.0/24"
+  
+rtus:
+  - name: "pc1"
+    address: "192.168.1.10"
+  - name: "pc2"
+    address: "192.168.1.20"
+
+switches:
+  - name: "sw1"
+    address: ""
+    connected:
+      - to: "pc1"
+      - to: "pc2"

@@ -1,14 +1,14 @@
 package management
 
 import (
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 )
 
 func (s *ServiceServer) serveClientBinary(w http.ResponseWriter, r *http.Request) {
 	path := s.Config.LocalPath + "/frontend/ied-client"
-	log.Println("[LOG] Serving client binary from " + path)
+	slog.Info("Serving client binary", "path", path)
 	if _, err := os.Stat(path); err != nil {
 		http.NotFound(w, r)
 		return
@@ -20,7 +20,7 @@ func (s *ServiceServer) serveClientBinary(w http.ResponseWriter, r *http.Request
 
 func (s *ServiceServer) serveServerBinary(w http.ResponseWriter, r *http.Request) {
 	path := s.Config.LocalPath + "/frontend/ied-server"
-	log.Println("[LOG] Serving server binary from " + path)
+	slog.Info("Serving server binary", "path", path)
 	if _, err := os.Stat(path); err != nil {
 		http.NotFound(w, r)
 		return

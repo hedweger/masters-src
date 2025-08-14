@@ -2,10 +2,9 @@ package config
 
 import (
 	"fmt"
+	"gopkg.in/yaml.v3"
 	"net"
 	"os"
-
-	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
@@ -14,6 +13,7 @@ type Config struct {
 	Switches     []DeviceConfig `yaml:"switches"`
 	BinaryPath   string         `yaml:"binary_path"`
 	FrontendPath string         `yaml:"frontend_path"`
+	Test         bool           `yaml:"test,omitempty"`
 }
 
 type NetworkConfig struct {
@@ -25,6 +25,8 @@ type DeviceConfig struct {
 	Name      string       `yaml:"name"`
 	Address   string       `yaml:"address"`
 	Connected []Connection `yaml:"connected,omitempty"`
+	Memory    int          `yaml:"memory"`
+	VCPU      int          `yaml:"vcpu"`
 }
 
 type Connection struct {
