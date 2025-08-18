@@ -10,23 +10,21 @@ import (
 	"scada-simu/internal/device"
 )
 
-type DeploymentStatus string
-
-const (
-	StatusDeploying DeploymentStatus = "deploying"
-	StatusCompleted DeploymentStatus = "completed"
-	StatusError     DeploymentStatus = "error"
-)
-
 type DeploymentRequest struct {
 	ConfigPath string `json:"config_path"`
 	OutputDir  string `json:"output_dir"`
 }
 
 type DeploymentResponse struct {
-	Success bool   `json:"success"`
 	Message string `json:"message"`
 	Status  string `json:"status"`
+}
+
+func (s *ServiceServer) handleDeployStatus(w http.ResponseWriter, r *http.Request) {
+    s.sendResponse(w, DeploymentResponse{
+        Message: "Current deployment status",
+        Status:  s.deploymentStatus,
+    })
 }
 
 func (s *ServiceServer) runDeployment(cfg *config.Config, outputDir string) {
@@ -36,6 +34,7 @@ func (s *ServiceServer) runDeployment(cfg *config.Config, outputDir string) {
 	manager.Deploy()
 	manager.StartVMs()
 	slog.Info("VM deployment completed", "outputDir", outputDir)
+	s.deploymentStatus = "completed"
 }
 
 func (s *ServiceServer) handleDeploy(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +55,6 @@ func (s *ServiceServer) handleDeploy(w http.ResponseWriter, r *http.Request) {
 
 	if req.ConfigPath == "" {
 		s.sendResponse(w, DeploymentResponse{
-			Success: false,
 			Message: "Configuration path is required",
 			Status:  "error",
 		})
@@ -71,7 +69,6 @@ func (s *ServiceServer) handleDeploy(w http.ResponseWriter, r *http.Request) {
 	outputPath := s.Config.LocalPath + "/" + req.OutputDir
 	if _, err := os.Stat(configPath); os.IsNotExist(err) {
 		s.sendResponse(w, DeploymentResponse{
-			Success: false,
 			Message: fmt.Sprintf("Configuration file not found: %s", configPath),
 			Status:  "error",
 		})
@@ -82,7 +79,6 @@ func (s *ServiceServer) handleDeploy(w http.ResponseWriter, r *http.Request) {
 	cfg, err := config.LoadConfig(configPath)
 	if err != nil {
 		s.sendResponse(w, DeploymentResponse{
-			Success: false,
 			Message: fmt.Sprintf("Failed to load configuration: %v", err),
 			Status:  "error",
 		})
@@ -91,7 +87,6 @@ func (s *ServiceServer) handleDeploy(w http.ResponseWriter, r *http.Request) {
 
 	if err := os.MkdirAll(req.OutputDir, 0755); err != nil {
 		s.sendResponse(w, DeploymentResponse{
-			Success: false,
 			Message: fmt.Sprintf("Failed to create output directory: %v", err),
 			Status:  "error",
 		})
@@ -99,10 +94,10 @@ func (s *ServiceServer) handleDeploy(w http.ResponseWriter, r *http.Request) {
 	}
 
 	go s.runDeployment(cfg, outputPath)
+	s.deploymentStatus = "deploying"
 
 	s.sendResponse(w, DeploymentResponse{
-		Success: false,
-		Message: "Deployment started succesfully",
-		Status:  string(StatusDeploying),
+		Message: "Deployment started successfully",
+		Status:  s.deploymentStatus,
 	})
 }

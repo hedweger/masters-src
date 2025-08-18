@@ -12,10 +12,11 @@ type ServiceConfig struct {
 }
 
 type ServiceServer struct {
-	DeviceManager *device.Manager
-	HttpClient    *http.Client
-	Config        *ServiceConfig
-	fileCache     string
+	DeviceManager   *device.Manager
+	HttpClient      *http.Client
+	Config          *ServiceConfig
+	fileCache       string
+	deploymentStatus string
 }
 
 func (s *ServiceServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -34,10 +35,10 @@ func (s *ServiceServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		s.viewModel(w, r)
 	case "/api/scd/view":
 		s.viewScd(w, r)
+	case "/api/deploy/status":
+		s.handleDeployStatus(w, r)
 	case "/api/deploy":
 		s.handleDeploy(w, r)
-	case "/api/status":
-		s.handleStatus(w, r)
 	default:
 		slog.Error("404 Not Found", "path", r.URL.Path)
 		http.NotFound(w, r)
@@ -56,9 +57,10 @@ func (s *ServiceServer) serveDashboard(w http.ResponseWriter, r *http.Request) {
 
 func NewServiceServer(cfg ServiceConfig) *ServiceServer {
 	return &ServiceServer{
-		DeviceManager: nil,
-		HttpClient:    &http.Client{},
-		Config:        &cfg,
-		fileCache:     "",
+		DeviceManager:   nil,
+		HttpClient:      &http.Client{},
+		Config:          &cfg,
+		fileCache:       "",
+		deploymentStatus: "ready",
 	}
 }
